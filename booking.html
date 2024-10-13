@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Seat Booking</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f4f4f4;
+      text-align: center;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    .container {
+      display: inline-block;
+      padding: 20px;
+      background-color: white;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+    }
+
+    .seating-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .seat {
+      width: 50px;
+      height: 50px;
+      background-color: #4CAF50;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .seat.booked {
+      background-color: #e74c3c;
+      cursor: not-allowed;
+    }
+
+    .seat.selected {
+      background-color: #f39c12;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      background-color: #3498db;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+    }
+  </style>
+</head>
+<body>
+  <h1>Book Your Event Seat</h1>
+  <div class="container">
+    <div class="seating-grid" id="seating-grid">
+      <!-- Seats will be generated here -->
+    </div>
+    <button onclick="confirmBooking()">Confirm Booking</button>
+  </div>
+
+  <script>
+    const seatingGrid = document.getElementById('seating-grid');
+    const totalSeats = 25; // 5x5 grid for simplicity
+    const seats = Array(totalSeats).fill(false); // Track booked seats
+
+    // Generate the seating layout
+    function renderSeats() {
+      seatingGrid.innerHTML = ''; // Clear previous seats
+      seats.forEach((booked, index) => {
+        const seat = document.createElement('div');
+        seat.classList.add('seat');
+        if (booked) seat.classList.add('booked');
+        seat.onclick = () => selectSeat(index);
+        seatingGrid.appendChild(seat);
+      });
+    }
+
+    // Handle seat selection
+    function selectSeat(index) {
+      if (seats[index]) return; // Ignore booked seats
+      const selected = seatingGrid.children[index].classList.toggle('selected');
+    }
+
+    // Confirm booking and mark selected seats as booked
+    function confirmBooking() {
+      const selectedSeats = Array.from(
+        seatingGrid.getElementsByClassName('selected')
+      );
+      selectedSeats.forEach((seat) => {
+        const index = Array.from(seatingGrid.children).indexOf(seat);
+        seats[index] = true;
+        seat.classList.remove('selected');
+        seat.classList.add('booked');
+      });
+      alert('Booking confirmed!');
+    }
+
+    // Initial render
+    renderSeats();
+  </script>
+</body>
+</html>
