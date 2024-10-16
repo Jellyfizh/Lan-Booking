@@ -22,8 +22,8 @@
     }
     .seating-grid {
       display: grid;
-      grid-template-columns: repeat(5, 50px);
-      grid-template-rows: repeat(5, 50px);
+      grid-template-columns: repeat(10, 50px);
+      grid-template-rows: repeat(10, 50px);
       gap: 10px;
       margin-top: 20px;
       justify-content: center;
@@ -95,15 +95,20 @@
     // Custom seating layout based on the uploaded image
     const seatPositions = [
       { row: 1, col: 1 },
-      { row: 1, col: 2 },
       { row: 1, col: 3 },
-      { row: 1, col: 4 },
       { row: 1, col: 5 },
+      { row: 1, col: 7 },
       { row: 2, col: 2 },
-      { row: 3, col: 2 },
-      { row: 4, col: 2 },
+      { row: 2, col: 4 },
+      { row: 2, col: 6 },
+      { row: 2, col: 8 },
       { row: 5, col: 2 },
-      { row: 5, col: 1 },
+      { row: 7, col: 2 },
+      { row: 9, col: 2 },
+      { row: 4, col: 1 },
+      { row: 6, col: 1 },
+      { row: 8, col: 1 },
+      { row: 10, col: 1 },
     ];
 
     // Variable to control seat reset behavior
