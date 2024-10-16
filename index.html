@@ -76,45 +76,92 @@
     <button onclick="confirmBooking()">Confirm Booking</button>
   </div>
 
-  <script>
-    const seatingGrid = document.getElementById('seating-grid');
-    const totalSeats = 25; // 5x5 grid for simplicity
-    const seats = Array(totalSeats).fill(false); // Track booked seats
+ <script>
+  // Your Firebase configuration details here
+const firebaseConfig = {
+  apiKey: "AIzaSyBTva27g_wzp6MqhfHgLTvtnH6_6ncA8Iw",
+  authDomain: "lan-booking.firebaseapp.com",
+  projectId: "lan-booking",
+  storageBucket: "lan-booking.appspot.com",
+  messagingSenderId: "979890927043",
+  appId: "1:979890927043:web:2b239388ee6cf301677976"
+};
 
-    // Generate the seating layout
-    function renderSeats() {
-      seatingGrid.innerHTML = ''; // Clear previous seats
-      seats.forEach((booked, index) => {
-        const seat = document.createElement('div');
-        seat.classList.add('seat');
-        if (booked) seat.classList.add('booked');
-        seat.onclick = () => selectSeat(index);
-        seatingGrid.appendChild(seat);
-      });
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+
+  const seatingGrid = document.getElementById('seating-grid');
+
+  // Fetch seats data from Firebase
+  async function fetchSeats() {
+    const snapshot = await firebase.database().ref('/seats').once('value');
+    const seats = snapshot.val() || [];
+    renderSeats(seats);
+  }
+
+  // Render seats based on Firebase data
+  function renderSeats(seats) {
+    seatingGrid.innerHTML = '';
+    seats.forEach((seat, index) => {
+      const seatElement = document.createElement('div');
+      seatElement.classList.add('seat');
+      if (seat.booked) seatElement.classList.add('booked');
+      seatElement.onclick = () => selectSeat(index);
+      seatingGrid.appendChild(seatElement);
+    });
+  }
+
+  const selectedSeats = new Set();
+
+  // Handle seat selection
+  function selectSeat(index) {
+    const seatElement = seatingGrid.children[index];
+    if (seatElement.classList.contains('booked')) return; // Ignore booked seats
+    seatElement.classList.toggle('selected');
+    if (selectedSeats.has(index)) {
+      selectedSeats.delete(index);
+    } else {
+      selectedSeats.add(index);
+    }
+  }
+
+  // Confirm booking and mark selected seats as booked in Firebase
+  async function confirmBooking() {
+    if (selectedSeats.size === 0) {
+      alert('Please select at least one seat.');
+      return;
     }
 
-    // Handle seat selection
-    function selectSeat(index) {
-      if (seats[index]) return; // Ignore booked seats
-      const selected = seatingGrid.children[index].classList.toggle('selected');
-    }
-
-    // Confirm booking and mark selected seats as booked
-    function confirmBooking() {
-      const selectedSeats = Array.from(
-        seatingGrid.getElementsByClassName('selected')
-      );
-      selectedSeats.forEach((seat) => {
-        const index = Array.from(seatingGrid.children).indexOf(seat);
-        seats[index] = true;
-        seat.classList.remove('selected');
-        seat.classList.add('booked');
+    try {
+      const updates = {};
+      selectedSeats.forEach(index => {
+        updates[`/seats/${index}/booked`] = true;
       });
+
+      await firebase.database().ref().update(updates);
       alert('Booking confirmed!');
+      selectedSeats.clear();
+      fetchSeats(); // Refresh seat data
+    } catch (error) {
+      console.error('Failed to confirm booking', error);
+      alert('Failed to confirm booking');
     }
+  }
 
-    // Initial render
-    renderSeats();
-  </script>
-</body>
-</html>
+  // Initialize seats in Firebase (only needed once to set up the initial data)
+  async function initializeSeats() {
+    const snapshot = await firebase.database().ref('/seats').once('value');
+    if (!snapshot.exists()) {
+      const initialSeats = Array.from({ length: 25 }, () => ({ booked: false }));
+      await firebase.database().ref('/seats').set(initialSeats);
+      console.log('Seats initialized');
+    }
+  }
+
+  // Run initial seat initialization (only needed once, can be commented out afterward)
+  initializeSeats();
+
+  // Initial fetch of seats on page load
+  fetchSeats();
+</script>
