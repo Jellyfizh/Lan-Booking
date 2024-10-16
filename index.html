@@ -12,11 +12,7 @@
       background-color: #f4f4f4;
       text-align: center;
     }
-
-    h1 {
-      color: #333;
-    }
-
+    h1 { color: #333; }
     .container {
       display: inline-block;
       padding: 20px;
@@ -24,14 +20,12 @@
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       border-radius: 10px;
     }
-
     .seating-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
       gap: 10px;
       margin-top: 20px;
     }
-
     .seat {
       width: 50px;
       height: 50px;
@@ -40,16 +34,8 @@
       cursor: pointer;
       transition: background-color 0.2s;
     }
-
-    .seat.booked {
-      background-color: #e74c3c;
-      cursor: not-allowed;
-    }
-
-    .seat.selected {
-      background-color: #f39c12;
-    }
-
+    .seat.booked { background-color: #e74c3c; cursor: not-allowed; }
+    .seat.selected { background-color: #f39c12; }
     button {
       margin-top: 20px;
       padding: 10px 20px;
@@ -61,10 +47,7 @@
       cursor: pointer;
       transition: background-color 0.2s;
     }
-
-    button:hover {
-      background-color: #2980b9;
-    }
+    button:hover { background-color: #2980b9; }
   </style>
 </head>
 <body>
@@ -76,92 +59,98 @@
     <button onclick="confirmBooking()">Confirm Booking</button>
   </div>
 
- <script>
-  // Your Firebase configuration details here
-const firebaseConfig = {
-  apiKey: "AIzaSyBTva27g_wzp6MqhfHgLTvtnH6_6ncA8Iw",
-  authDomain: "lan-booking.firebaseapp.com",
-  projectId: "lan-booking",
-  storageBucket: "lan-booking.appspot.com",
-  messagingSenderId: "979890927043",
-  appId: "1:979890927043:web:2b239388ee6cf301677976"
-};
+  <!-- Add Firebase SDKs to your HTML -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
 
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-  const database = firebase.database();
+  <script>
+    // Your Firebase configuration details here
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "lan-booking.firebaseapp.com",
+      projectId: "lan-booking",
+      storageBucket: "lan-booking.appspot.com",
+      messagingSenderId: "979890927043",
+      appId: "1:979890927043:web:2b239388ee6cf301677976"
+    };
 
-  const seatingGrid = document.getElementById('seating-grid');
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
 
-  // Fetch seats data from Firebase
-  async function fetchSeats() {
-    const snapshot = await firebase.database().ref('/seats').once('value');
-    const seats = snapshot.val() || [];
-    renderSeats(seats);
-  }
+    const seatingGrid = document.getElementById('seating-grid');
 
-  // Render seats based on Firebase data
-  function renderSeats(seats) {
-    seatingGrid.innerHTML = '';
-    seats.forEach((seat, index) => {
-      const seatElement = document.createElement('div');
-      seatElement.classList.add('seat');
-      if (seat.booked) seatElement.classList.add('booked');
-      seatElement.onclick = () => selectSeat(index);
-      seatingGrid.appendChild(seatElement);
-    });
-  }
-
-  const selectedSeats = new Set();
-
-  // Handle seat selection
-  function selectSeat(index) {
-    const seatElement = seatingGrid.children[index];
-    if (seatElement.classList.contains('booked')) return; // Ignore booked seats
-    seatElement.classList.toggle('selected');
-    if (selectedSeats.has(index)) {
-      selectedSeats.delete(index);
-    } else {
-      selectedSeats.add(index);
-    }
-  }
-
-  // Confirm booking and mark selected seats as booked in Firebase
-  async function confirmBooking() {
-    if (selectedSeats.size === 0) {
-      alert('Please select at least one seat.');
-      return;
-    }
-
-    try {
-      const updates = {};
-      selectedSeats.forEach(index => {
-        updates[`/seats/${index}/booked`] = true;
+    // Fetch seats data from Firebase in real-time
+    function fetchSeatsRealtime() {
+      firebase.database().ref('/seats').on('value', (snapshot) => {
+        const seats = snapshot.val() || [];
+        renderSeats(seats);
       });
-
-      await firebase.database().ref().update(updates);
-      alert('Booking confirmed!');
-      selectedSeats.clear();
-      fetchSeats(); // Refresh seat data
-    } catch (error) {
-      console.error('Failed to confirm booking', error);
-      alert('Failed to confirm booking');
     }
-  }
 
-  // Initialize seats in Firebase (only needed once to set up the initial data)
-  async function initializeSeats() {
-    const snapshot = await firebase.database().ref('/seats').once('value');
-    if (!snapshot.exists()) {
-      const initialSeats = Array.from({ length: 25 }, () => ({ booked: false }));
-      await firebase.database().ref('/seats').set(initialSeats);
-      console.log('Seats initialized');
+    // Render seats based on Firebase data
+    function renderSeats(seats) {
+      seatingGrid.innerHTML = '';
+      seats.forEach((seat, index) => {
+        const seatElement = document.createElement('div');
+        seatElement.classList.add('seat');
+        if (seat.booked) seatElement.classList.add('booked');
+        seatElement.onclick = () => selectSeat(index);
+        seatingGrid.appendChild(seatElement);
+      });
     }
-  }
 
-  // Run initial seat initialization (only needed once, can be commented out afterward)
-  initializeSeats();
+    const selectedSeats = new Set();
 
-  // Initial fetch of seats on page load
-  fetchSeats();
-</script>
+    // Handle seat selection
+    function selectSeat(index) {
+      const seatElement = seatingGrid.children[index];
+      if (seatElement.classList.contains('booked')) return; // Ignore booked seats
+      seatElement.classList.toggle('selected');
+      if (selectedSeats.has(index)) {
+        selectedSeats.delete(index);
+      } else {
+        selectedSeats.add(index);
+      }
+    }
+
+    // Confirm booking and mark selected seats as booked in Firebase
+    async function confirmBooking() {
+      if (selectedSeats.size === 0) {
+        alert('Please select at least one seat.');
+        return;
+      }
+
+      try {
+        const updates = {};
+        selectedSeats.forEach(index => {
+          updates[`/seats/${index}/booked`] = true;
+        });
+
+        await firebase.database().ref().update(updates);
+        alert('Booking confirmed!');
+        selectedSeats.clear();
+      } catch (error) {
+        console.error('Failed to confirm booking', error);
+        alert('Failed to confirm booking');
+      }
+    }
+
+    // Initialize seats in Firebase (only needed once to set up the initial data)
+    async function initializeSeats() {
+      const snapshot = await firebase.database().ref('/seats').once('value');
+      if (!snapshot.exists()) {
+        const initialSeats = Array.from({ length: 25 }, () => ({ booked: false }));
+        await firebase.database().ref('/seats').set(initialSeats);
+        console.log('Seats initialized');
+      }
+    }
+
+    // Uncomment this line to initialize seats for the first time
+    // initializeSeats();
+
+    // Fetch seat data on page load using real-time listener
+    fetchSeatsRealtime();
+  </script>
+</body>
+</html>
