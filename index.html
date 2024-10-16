@@ -59,9 +59,9 @@
     <button onclick="confirmBooking()">Confirm Booking</button>
   </div>
 
-  <!-- Add Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
+  <!-- Add Firebase SDKs (Compat version) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
   <script>
     // Your Firebase configuration details here
@@ -80,6 +80,7 @@
     const database = firebase.database();
 
     const seatingGrid = document.getElementById('seating-grid');
+    const selectedSeats = new Set();
 
     // Fetch seats data from Firebase in real-time
     function fetchSeatsRealtime() {
@@ -103,8 +104,6 @@
         seatingGrid.appendChild(seatElement);
       });
     }
-
-    const selectedSeats = new Set();
 
     // Handle seat selection
     function selectSeat(index) {
@@ -140,21 +139,11 @@
       }
     }
 
-    // Initialize seats in Firebase (only needed once to set up the initial data)
-    async function initializeSeats() {
-      const snapshot = await firebase.database().ref('/seats').once('value');
-      if (!snapshot.exists()) {
-        const initialSeats = Array.from({ length: 25 }, () => ({ booked: false }));
-        await firebase.database().ref('/seats').set(initialSeats);
-        console.log('Seats initialized');
-      }
-    }
-
-    // Uncomment this line to initialize seats for the first time
+    // Uncomment the following line only once to initialize seats in Firebase, then comment it back
     initializeSeats();
 
     // Fetch seat data on page load using real-time listener
-    // fetchSeatsRealtime();
+    fetchSeatsRealtime();
   </script>
 </body>
 </html>
