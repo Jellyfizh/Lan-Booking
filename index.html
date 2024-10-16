@@ -30,7 +30,6 @@
     }
     .seating-grid {
       display: grid;
-      grid-template-columns: repeat(5, 50px);
       gap: 10px;
       margin-top: 10px;
       justify-content: center;
@@ -92,16 +91,22 @@
       appId: "1:979890927043:web:2b239388ee6cf301677976"
     };
 
-    // Initialize Firebase
+     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
     const tableContainer = document.getElementById('table-container');
     const selectedSeats = new Set();
 
-    // Variables for number of tables and seats per table
-    const bookingsPerTable = 4; // Number of bookings per table
-    const numTables = 3; // Number of tables
+    // Define table configurations
+    const tableConfigurations = [
+      { numTables: 2, bookingsPerTable: 3 }, // 4 tables with 3 bookings each
+      { numTables: 1, bookingsPerTable: 4 },
+      { numTables: 2, bookingsPerTable: 2 }  // 2 tables with 2 bookings each
+    ];
+
+    // Calculate total number of seats
+    const totalSeats = tableConfigurations.reduce((acc, config) => acc + config.numTables * config.bookingsPerTable, 0);
 
     // Fetch seats data from Firebase in real-time
     function fetchSeatsRealtime() {
@@ -116,33 +121,36 @@
       tableContainer.innerHTML = '';
       let seatIndex = 0;
 
-      for (let tableIndex = 0; tableIndex < numTables; tableIndex++) {
-        const tableDiv = document.createElement('div');
-        tableDiv.classList.add('table-container');
+      tableConfigurations.forEach((config, tableConfigIndex) => {
+        for (let tableIndex = 0; tableIndex < config.numTables; tableIndex++) {
+          const tableDiv = document.createElement('div');
+          tableDiv.classList.add('table-container');
 
-        const seatingGrid = document.createElement('div');
-        seatingGrid.classList.add('seating-grid');
+          const seatingGrid = document.createElement('div');
+          seatingGrid.classList.add('seating-grid');
+          seatingGrid.style.gridTemplateColumns = `repeat(${config.bookingsPerTable}, 50px)`;
 
-        // Create seats for each table
-        for (let seatNum = 0; seatNum < bookingsPerTable; seatNum++) {
-          if (seatIndex >= seats.length) break;
+          // Create seats for each table
+          for (let seatNum = 0; seatNum < config.bookingsPerTable; seatNum++) {
+            if (seatIndex >= seats.length) break;
 
-          const seatElement = document.createElement('div');
-          seatElement.classList.add('seat');
+            const seatElement = document.createElement('div');
+            seatElement.classList.add('seat');
 
-          // If the seat is booked, add the 'booked' class
-          if (seats[seatIndex] && seats[seatIndex].booked) {
-            seatElement.classList.add('booked');
+            // If the seat is booked, add the 'booked' class
+            if (seats[seatIndex] && seats[seatIndex].booked) {
+              seatElement.classList.add('booked');
+            }
+
+            seatElement.onclick = () => selectSeat(seatIndex);
+            seatingGrid.appendChild(seatElement);
+            seatIndex++;
           }
 
-          seatElement.onclick = () => selectSeat(seatIndex);
-          seatingGrid.appendChild(seatElement);
-          seatIndex++;
+          tableDiv.appendChild(seatingGrid);
+          tableContainer.appendChild(tableDiv);
         }
-
-        tableDiv.appendChild(seatingGrid);
-        tableContainer.appendChild(tableDiv);
-      }
+      });
     }
 
     // Handle seat selection
@@ -233,7 +241,6 @@
     async function initializeSeats() {
       const reset_seats_on_initial = false; // Set to true to reset all seats initially
       if (reset_seats_on_initial) {
-        const totalSeats = bookingsPerTable * numTables;
         const initialSeats = Array.from({ length: totalSeats }, () => ({
           booked: false,
           nickname: null,
