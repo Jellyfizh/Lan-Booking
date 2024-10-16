@@ -20,12 +20,19 @@
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       border-radius: 10px;
     }
+    .table-container {
+      display: inline-block;
+      margin: 20px;
+      padding: 15px;
+      background-color: #eaeaea;
+      border-radius: 10px;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    }
     .seating-grid {
       display: grid;
-      grid-template-columns: repeat(10, 50px);
-      grid-template-rows: repeat(10, 50px);
+      grid-template-columns: repeat(5, 50px);
       gap: 10px;
-      margin-top: 20px;
+      margin-top: 10px;
       justify-content: center;
     }
     .seat {
@@ -62,8 +69,8 @@
   <div class="container">
     <input type="text" id="nickname" class="nickname-input" placeholder="Enter your nickname" />
     <input type="password" id="password" class="nickname-input" placeholder="Enter 2-character password" maxlength="2"/>
-    <div class="seating-grid" id="seating-grid">
-      <!-- Seats will be generated here -->
+    <div id="table-container">
+      <!-- Tables with seats will be generated here -->
     </div>
     <button onclick="confirmBooking()">Confirm Booking</button>
     <button onclick="removeBooking()">Remove Booking</button>
@@ -89,56 +96,59 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    const seatingGrid = document.getElementById('seating-grid');
+    const tableContainer = document.getElementById('table-container');
     const selectedSeats = new Set();
 
-    // Custom seating layout based on the uploaded image
-    const seatPositions = [
-      { row: 1, col: 1 },
-      { row: 1, col: 3 },
-      { row: 1, col: 5 },
-      { row: 1, col: 7 },
-      { row: 2, col: 2 },
-      { row: 2, col: 4 },
-      { row: 2, col: 6 },
-      { row: 2, col: 8 },
-      { row: 5, col: 2 },
-      { row: 7, col: 2 },
-      { row: 9, col: 2 },
-      { row: 4, col: 1 },
-      { row: 6, col: 1 },
-      { row: 8, col: 1 },
-      { row: 10, col: 1 },
-    ];
-
-    // Variable to control seat reset behavior
-    const reset_seats_on_initial = true;
+    // Variables for number of tables and seats per table
+    const bookingsPerTable = 4; // Number of bookings per table
+    const numTables = 3; // Number of tables
 
     // Fetch seats data from Firebase in real-time
     function fetchSeatsRealtime() {
       firebase.database().ref('/seats').on('value', (snapshot) => {
         const seats = snapshot.val() || [];
-        renderSeats(seats);
+        renderTables(seats);
       });
     }
 
-    // Render seats based on Firebase data
-    function renderSeats(seats) {
-      seatingGrid.innerHTML = '';
-      seatPositions.forEach((pos, index) => {
-        const seatElement = document.createElement('div');
-        seatElement.classList.add('seat');
-        if (seats[index] && seats[index].booked) {
-          seatElement.classList.add('booked');
+    // Render tables and seats based on Firebase data
+    function renderTables(seats) {
+      tableContainer.innerHTML = '';
+      let seatIndex = 0;
+
+      for (let tableIndex = 0; tableIndex < numTables; tableIndex++) {
+        const tableDiv = document.createElement('div');
+        tableDiv.classList.add('table-container');
+
+        const seatingGrid = document.createElement('div');
+        seatingGrid.classList.add('seating-grid');
+
+        // Create seats for each table
+        for (let seatNum = 0; seatNum < bookingsPerTable; seatNum++) {
+          if (seatIndex >= seats.length) break;
+
+          const seatElement = document.createElement('div');
+          seatElement.classList.add('seat');
+
+          // If the seat is booked, add the 'booked' class
+          if (seats[seatIndex] && seats[seatIndex].booked) {
+            seatElement.classList.add('booked');
+          }
+
+          seatElement.onclick = () => selectSeat(seatIndex);
+          seatingGrid.appendChild(seatElement);
+          seatIndex++;
         }
-        seatElement.onclick = () => selectSeat(index);
-        seatingGrid.appendChild(seatElement);
-      });
+
+        tableDiv.appendChild(seatingGrid);
+        tableContainer.appendChild(tableDiv);
+      }
     }
 
     // Handle seat selection
     function selectSeat(index) {
-      const seatElement = seatingGrid.children[index];
+      const seatElements = document.querySelectorAll('.seat');
+      const seatElement = seatElements[index];
       seatElement.classList.toggle('selected');
       if (selectedSeats.has(index)) {
         selectedSeats.delete(index);
@@ -221,8 +231,10 @@
 
     // Initialize seats in Firebase based on the reset_seats_on_initial variable
     async function initializeSeats() {
+      const reset_seats_on_initial = false; // Set to true to reset all seats initially
       if (reset_seats_on_initial) {
-        const initialSeats = Array.from({ length: seatPositions.length }, () => ({
+        const totalSeats = bookingsPerTable * numTables;
+        const initialSeats = Array.from({ length: totalSeats }, () => ({
           booked: false,
           nickname: null,
           password: null
