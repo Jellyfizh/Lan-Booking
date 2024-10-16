@@ -82,6 +82,18 @@
     const seatingGrid = document.getElementById('seating-grid');
     const selectedSeats = new Set();
 
+    // Initialize seats in Firebase (only needed once to set up the initial data)
+    async function initializeSeats() {
+      const snapshot = await firebase.database().ref('/seats').once('value');
+      if (!snapshot.exists()) {
+        const initialSeats = Array.from({ length: 25 }, () => ({ booked: false }));
+        await firebase.database().ref('/seats').set(initialSeats);
+        console.log('Seats initialized');
+      }
+    }
+    
+    initializeSeats();
+    
     // Fetch seats data from Firebase in real-time
     function fetchSeatsRealtime() {
       // Using 'on' to get real-time updates
@@ -140,7 +152,7 @@
     }
 
     // Uncomment the following line only once to initialize seats in Firebase, then comment it back
-    initializeSeats();
+
 
     // Fetch seat data on page load using real-time listener
     fetchSeatsRealtime();
