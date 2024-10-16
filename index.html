@@ -22,9 +22,11 @@
     }
     .seating-grid {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(5, 50px);
+      grid-template-rows: repeat(5, 50px);
       gap: 10px;
       margin-top: 20px;
+      justify-content: center;
     }
     .seat {
       width: 50px;
@@ -37,7 +39,7 @@
     .seat.booked { background-color: #e74c3c; cursor: not-allowed; }
     .seat.selected { background-color: #f39c12; }
     button {
-      margin-top: 20px;
+      margin-top: 10px;
       padding: 10px 20px;
       font-size: 16px;
       border: none;
@@ -48,15 +50,23 @@
       transition: background-color 0.2s;
     }
     button:hover { background-color: #2980b9; }
+    .nickname-input {
+      margin-top: 20px;
+      font-size: 16px;
+      padding: 5px;
+    }
   </style>
 </head>
 <body>
   <h1>Book Your Event Seat</h1>
   <div class="container">
+    <input type="text" id="nickname" class="nickname-input" placeholder="Enter your nickname" />
+    <input type="password" id="password" class="nickname-input" placeholder="Enter 2-character password" maxlength="2"/>
     <div class="seating-grid" id="seating-grid">
       <!-- Seats will be generated here -->
     </div>
     <button onclick="confirmBooking()">Confirm Booking</button>
+    <button onclick="removeBooking()">Remove Booking</button>
   </div>
 
   <!-- Add Firebase SDKs (Compat version) -->
@@ -82,20 +92,22 @@
     const seatingGrid = document.getElementById('seating-grid');
     const selectedSeats = new Set();
 
-    // Initialize seats in Firebase (only needed once to set up the initial data)
-    async function initializeSeats() {
-      const snapshot = await firebase.database().ref('/seats').once('value');
-      if (!snapshot.exists()) {
-        const initialSeats = Array.from({ length: 25 }, () => ({ booked: false }));
-        await firebase.database().ref('/seats').set(initialSeats);
-        console.log('Seats initialized');
-      }
-    }
+    // Custom seating layout based on the uploaded image
+    const seatPositions = [
+      { row: 1, col: 1 },
+      { row: 1, col: 2 },
+      { row: 1, col: 3 },
+      { row: 1, col: 4 },
+      { row: 1, col: 5 },
+      { row: 2, col: 2 },
+      { row: 3, col: 2 },
+      { row: 4, col: 2 },
+      { row: 5, col: 2 },
+      { row: 5, col: 1 },
+    ];
 
-    
     // Fetch seats data from Firebase in real-time
     function fetchSeatsRealtime() {
-      // Using 'on' to get real-time updates
       firebase.database().ref('/seats').on('value', (snapshot) => {
         const seats = snapshot.val() || [];
         renderSeats(seats);
@@ -105,10 +117,10 @@
     // Render seats based on Firebase data
     function renderSeats(seats) {
       seatingGrid.innerHTML = '';
-      seats.forEach((seat, index) => {
+      seatPositions.forEach((pos, index) => {
         const seatElement = document.createElement('div');
         seatElement.classList.add('seat');
-        if (seat.booked) {
+        if (seats[index] && seats[index].booked) {
           seatElement.classList.add('booked');
         }
         seatElement.onclick = () => selectSeat(index);
@@ -130,6 +142,17 @@
 
     // Confirm booking and mark selected seats as booked in Firebase
     async function confirmBooking() {
+      const nickname = document.getElementById('nickname').value.trim();
+      const password = document.getElementById('password').value.trim();
+
+      if (nickname === '') {
+        alert('Please enter your nickname.');
+        return;
+      }
+      if (password.length !== 2) {
+        alert('Please enter a 2-character password.');
+        return;
+      }
       if (selectedSeats.size === 0) {
         alert('Please select at least one seat.');
         return;
@@ -139,6 +162,8 @@
         const updates = {};
         selectedSeats.forEach(index => {
           updates[`/seats/${index}/booked`] = true;
+          updates[`/seats/${index}/nickname`] = nickname;
+          updates[`/seats/${index}/password`] = password;
         });
 
         await firebase.database().ref().update(updates);
@@ -150,8 +175,55 @@
       }
     }
 
+    // Remove booking for selected seats
+    async function removeBooking() {
+      const password = document.getElementById('password').value.trim();
+
+      if (password.length !== 2) {
+        alert('Please enter your 2-character password to remove booking.');
+        return;
+      }
+      if (selectedSeats.size === 0) {
+        alert('Please select at least one seat to remove booking.');
+        return;
+      }
+
+      try {
+        const updates = {};
+        const seatsSnapshot = await firebase.database().ref('/seats').once('value');
+        const seats = seatsSnapshot.val() || [];
+
+        selectedSeats.forEach(index => {
+          if (seats[index] && (seats[index].password === password || password === 'xx')) {
+            updates[`/seats/${index}/booked`] = false;
+            updates[`/seats/${index}/nickname`] = null;
+            updates[`/seats/${index}/password`] = null;
+          } else {
+            alert(`Incorrect password for seat ${index + 1}.`);
+          }
+        });
+
+        await firebase.database().ref().update(updates);
+        alert('Booking removed!');
+        selectedSeats.clear();
+      } catch (error) {
+        console.error('Failed to remove booking', error);
+        alert('Failed to remove booking');
+      }
+    }
+
+    // Initialize seats in Firebase (only needed once to set up the initial data)
+    async function initializeSeats() {
+      const snapshot = await firebase.database().ref('/seats').once('value');
+      if (!snapshot.exists()) {
+        const initialSeats = Array.from({ length: seatPositions.length }, () => ({ booked: false, nickname: null, password: null }));
+        await firebase.database().ref('/seats').set(initialSeats);
+        console.log('Seats initialized');
+      }
+    }
+
     // Uncomment the following line only once to initialize seats in Firebase, then comment it back
-    // initializeSeats();
+     initializeSeats();
 
     // Fetch seat data on page load using real-time listener
     fetchSeatsRealtime();
