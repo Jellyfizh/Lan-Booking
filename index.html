@@ -172,11 +172,11 @@
               seatElement.appendChild(nameLabel);  // Add the nickname to the seat element
             }
     
-            // Use 'let' here to ensure seatIndex is scoped correctly for each seat
+            // Pass the seats data to the selectSeat function
             seatElement.onclick = (() => {
               const currentSeatIndex = seatIndex; // Capture seat index correctly
               return function() {
-                selectSeat(seatElement, currentSeatIndex);
+                selectSeat(seatElement, currentSeatIndex, seats);  // Pass seats array as an argument
               };
             })();
     
@@ -190,7 +190,6 @@
       });
     }
 
-
     // Function to clear all selected seats
     function clearSelectedSeats() {
       document.querySelectorAll('.seat.selected').forEach(seat => {
@@ -198,7 +197,7 @@
       });
     }
 
-    function selectSeat(seatElement, index) {
+    function selectSeat(seatElement, index, seats) {
       // Check if the seat is already selected (deselect it)
       if (seatElement.classList.contains('selected')) {
         seatElement.classList.remove('selected');
@@ -216,7 +215,7 @@
         console.log(`Selected seat index: ${index}`);
     
         // Check the booking status of the seat from Firebase data
-        const seatData = seats[index];  // Get the seat data from Firebase
+        const seatData = seats[index];  // Use the passed seats array
     
         if (seatData && seatData.booked) {
           showPasswordAndRemove();  // Show only password entry and "Remove Booking" button
