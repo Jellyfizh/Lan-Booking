@@ -168,19 +168,19 @@
       });
     }
 
+    // Function to handle seat selection
     function selectSeat(seatElement, index) {
-      // Clear all selected seats before selecting a new one
+      // Clear all previously selected seats
       clearSelectedSeats();
-
-      // Toggle selection of the clicked seat
-      seatElement.classList.add('selected');
-
-      // Add the selected seat to the Set
-      selectedSeats.clear();
-      selectedSeats.add(index);
-
-      console.log('Selected seat:', Array.from(selectedSeats));  // Debugging: log selected seat
+      
+      // Clear the Set and add only the newly selected seat
+      selectedSeats.clear();  // Ensure only one seat is selected at a time
+      seatElement.classList.add('selected');  // Add the selected class to the clicked seat
+      selectedSeats.add(index);  // Add the currently selected seat's index
+      
+      console.log('Selected seat index:', index);  // Debugging: log selected seat
     }
+
 
     // Show inputs for booking (nickname and password)
     function showBookingInputs() {
@@ -192,11 +192,10 @@
       document.getElementById('booking-inputs').style.display = 'block';
     }
 
-    // Submit the booking after nickname and password are provided
     async function submitBooking() {
       const nickname = document.getElementById('nickname').value.trim();
       const password = document.getElementById('password').value.trim();
-
+    
       if (nickname === '') {
         alert('Please enter your nickname.');
         return;
@@ -205,23 +204,45 @@
         alert('Please enter a 2-character password.');
         return;
       }
-
+    
+      // Ensure that one seat is selected
+      if (selectedSeats.size !== 1) {
+        alert('Please select a seat before confirming booking.');
+        return;
+      }
+    
+      // Get the selected seat index from the Set (since only one seat can be selected)
+      const selectedSeatIndex = Array.from(selectedSeats)[0];
+    
       try {
-        const updates = {};
-        selectedSeats.forEach(index => {
-          updates[`/seats/${index}/booked`] = true;
-          updates[`/seats/${index}/nickname`] = nickname;
-          updates[`/seats/${index}/password`] = password;
+        // Fetch seat data to ensure it exists and then update
+        firebase.database().ref(`/seats/${selectedSeatIndex}`).once('value').then(snapshot => {
+          if (snapshot.exists()) {
+            // Prepare the updates
+            const updates = {};
+            updates[`/seats/${selectedSeatIndex}/booked`] = true;
+            updates[`/seats/${selectedSeatIndex}/nickname`] = nickname;
+            updates[`/seats/${selectedSeatIndex}/password`] = password;
+    
+            // Perform the actual update in Firebase
+            firebase.database().ref().update(updates)
+              .then(() => {
+                alert('Booking confirmed!');
+                clearSelectedSeats();  // Clear seat selection
+                selectedSeats.clear();  // Clear the Set
+                document.getElementById('booking-inputs').style.display = 'none';  // Hide inputs
+              })
+              .catch(error => {
+                console.error('Failed to confirm booking', error);
+                alert('Failed to confirm booking');
+              });
+          } else {
+            alert('Selected seat does not exist.');
+          }
         });
-
-        await firebase.database().ref().update(updates);
-        alert('Booking confirmed!');
-        clearSelectedSeats();
-        selectedSeats.clear();
-        document.getElementById('booking-inputs').style.display = 'none'; // Hide inputs after booking
       } catch (error) {
-        console.error('Failed to confirm booking', error);
-        alert('Failed to confirm booking');
+        console.error('Error during booking submission:', error);
+        alert('An error occurred during booking submission.');
       }
     }
 
