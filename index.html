@@ -161,15 +161,22 @@
       });
     }
 
-    // Handle seat selection
-    function selectSeat(seatElement, index) {
-      seatElement.classList.toggle('selected');
-      if (selectedSeats.has(index)) {
-        selectedSeats.delete(index);
-      } else {
-        selectedSeats.add(index);
-      }
-    }
+
+// Handle seat selection to allow only one selected seat at a time
+function selectSeat(seatElement, index) {
+  // Clear all selected seats before selecting a new one
+  clearSelectedSeats();
+
+  // Toggle selection of the clicked seat
+  seatElement.classList.toggle('selected');
+  
+  if (seatElement.classList.contains('selected')) {
+    selectedSeats.clear(); // Ensure no previously selected seats remain
+    selectedSeats.add(index); // Add the newly selected seat
+  } else {
+    selectedSeats.delete(index); // Deselect the seat if clicked again
+  }
+}
 
     // Show inputs for booking (nickname and password)
     function showBookingInputs() {
