@@ -299,10 +299,9 @@
       }
     }
 
-    // Remove booking for selected seats
     async function removeBooking() {
       const password = document.getElementById('password').value.trim();
-
+    
       if (password.length !== 2) {
         alert('Please enter your 2-character password to remove booking.');
         return;
@@ -311,22 +310,34 @@
         alert('Please select at least one seat to remove booking.');
         return;
       }
-
+    
       try {
+        let passwordMismatch = false; // Flag to track if any password mismatch occurs
         const updates = {};
         const seatsSnapshot = await firebase.database().ref('/seats').once('value');
         const seats = seatsSnapshot.val() || [];
-
+    
         selectedSeats.forEach(index => {
-          if (seats[index] && seats[index].password === password) {
+          const seat = seats[index];
+          if (seat && seat.password === password) {
+            // Password matches, so proceed to remove the booking
             updates[`/seats/${index}/booked`] = false;
             updates[`/seats/${index}/nickname`] = null;
             updates[`/seats/${index}/password`] = null;
           } else {
-            alert(`Incorrect password for seat ${index + 1}.`);
+            // Password doesn't match, set the mismatch flag
+            passwordMismatch = true;
+            console.log(`Incorrect password for seat ${index + 1}`);  // Debugging
           }
         });
-
+    
+        // If there was a password mismatch, alert the user and abort the operation
+        if (passwordMismatch) {
+          alert('Wrong password for booking. Please try again.');
+          return;  // Stop execution without updating anything
+        }
+    
+        // Proceed with the update only if passwords match
         await firebase.database().ref().update(updates);
         alert('Booking removed!');
         selectedSeats.clear();
@@ -336,6 +347,7 @@
         alert('Failed to remove booking');
       }
     }
+
 
     // Initialize seats in Firebase based on the reset_seats_on_initial variable
     async function initializeSeats() {
