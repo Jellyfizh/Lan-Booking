@@ -124,42 +124,50 @@
       });
     }
 
-    // Render tables and seats based on Firebase data
+        // Render tables and seats based on Firebase data
     function renderTables(seats) {
       tableContainer.innerHTML = '';
-      let seatIndex = 0;
-
+      let seatIndex = 0; // Start seat index
+    
       tableConfigurations.forEach((config, tableConfigIndex) => {
         for (let tableIndex = 0; tableIndex < config.numTables; tableIndex++) {
           const tableDiv = document.createElement('div');
           tableDiv.classList.add('table-container');
-
+    
           const seatingGrid = document.createElement('div');
           seatingGrid.classList.add('seating-grid');
           seatingGrid.style.gridTemplateColumns = `repeat(${config.bookingsPerTable}, 50px)`;
-
+    
           // Create seats for each table
           for (let seatNum = 0; seatNum < config.bookingsPerTable; seatNum++) {
             if (seatIndex >= seats.length) break;
-
+    
             const seatElement = document.createElement('div');
             seatElement.classList.add('seat');
-
+    
             // If the seat is booked, add the 'booked' class
             if (seats[seatIndex] && seats[seatIndex].booked) {
               seatElement.classList.add('booked');
             }
-
-            seatElement.onclick = () => selectSeat(seatElement, seatIndex);
+    
+            // Use 'let' here to ensure seatIndex is scoped correctly for each seat
+            seatElement.onclick = (() => {
+              const currentSeatIndex = seatIndex; // Capture seat index correctly
+              return function() {
+                selectSeat(seatElement, currentSeatIndex);
+              };
+            })();
+    
             seatingGrid.appendChild(seatElement);
-            seatIndex++;
+            seatIndex++; // Increment seat index after each seat
           }
-
+    
           tableDiv.appendChild(seatingGrid);
           tableContainer.appendChild(tableDiv);
         }
       });
     }
+
 
     // Function to clear all selected seats
     function clearSelectedSeats() {
