@@ -196,17 +196,22 @@
       });
     }
 
-    // Function to handle seat selection
     function selectSeat(seatElement, index) {
-      // Clear all previously selected seats
-      clearSelectedSeats();
-      
-      // Clear the Set and add only the newly selected seat
-      selectedSeats.clear();  // Ensure only one seat is selected at a time
-      seatElement.classList.add('selected');  // Add the selected class to the clicked seat
-      selectedSeats.add(index);  // Add the currently selected seat's index
-      
-      console.log('Selected seat index:', index);  // Debugging: log selected seat
+      // Check if the seat is already selected
+      if (seatElement.classList.contains('selected')) {
+        // If already selected, deselect it
+        seatElement.classList.remove('selected');
+        selectedSeats.delete(index);  // Remove the seat index from the selectedSeats set
+        console.log(`Deselected seat index: ${index}`);
+      } else {
+        // If not selected, select the seat and deselect any others
+        clearSelectedSeats();  // Clear any previous selections visually
+        selectedSeats.clear();  // Ensure only one seat is selected
+    
+        seatElement.classList.add('selected');
+        selectedSeats.add(index);  // Add the currently selected seat's index
+        console.log(`Selected seat index: ${index}`);
+      }
     }
 
 
