@@ -203,6 +203,9 @@
         seatElement.classList.remove('selected');
         selectedSeats.delete(index);  // Remove the seat index from the selectedSeats set
         console.log(`Deselected seat index: ${index}`);
+        
+        // Hide booking inputs when no seat is selected
+        hideBookingInputs();
       } else {
         // If not selected, select the seat and deselect any others
         clearSelectedSeats();  // Clear any previous selections visually
@@ -211,18 +214,25 @@
         seatElement.classList.add('selected');
         selectedSeats.add(index);  // Add the currently selected seat's index
         console.log(`Selected seat index: ${index}`);
+        
+        // Show booking inputs when a seat is selected
+        showBookingInputs();
       }
     }
 
 
-    // Show inputs for booking (nickname and password)
+    // Show booking inputs only if a seat is selected
     function showBookingInputs() {
-      if (selectedSeats.size === 0) {
-        alert('Please select at least one seat to confirm booking.');
-        return;
+      const bookingInputs = document.getElementById('booking-inputs');
+      if (selectedSeats.size > 0) {  // If there is a selected seat
+        bookingInputs.style.display = 'block';  // Show the booking inputs
       }
-      console.log('Showing booking inputs...'); // Debugging statement
-      document.getElementById('booking-inputs').style.display = 'block';
+    }
+    
+        // Hide booking inputs when no seat is selected
+    function hideBookingInputs() {
+      const bookingInputs = document.getElementById('booking-inputs');
+      bookingInputs.style.display = 'none';  // Hide the booking inputs
     }
 
     async function submitBooking() {
@@ -263,7 +273,7 @@
                 alert('Booking confirmed!');
                 clearSelectedSeats();  // Clear seat selection
                 selectedSeats.clear();  // Clear the Set
-                document.getElementById('booking-inputs').style.display = 'none';  // Hide inputs
+                hideBookingInputs();
               })
               .catch(error => {
                 console.error('Failed to confirm booking', error);
