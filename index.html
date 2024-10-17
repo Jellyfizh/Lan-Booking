@@ -267,7 +267,7 @@ function selectSeat(seatElement, index) {
 
     // Initialize seats in Firebase based on the reset_seats_on_initial variable
     async function initializeSeats() {
-      const reset_seats_on_initial = false; // Set to true to reset all seats initially
+      const reset_seats_on_initial = true; // Set to true to reset all seats initially
       if (reset_seats_on_initial) {
         const initialSeats = Array.from({ length: totalSeats }, () => ({
           booked: false,
@@ -285,7 +285,7 @@ function selectSeat(seatElement, index) {
     }
 
     // Uncomment the following line to initialize seats in Firebase
-   // initializeSeats();
+   initializeSeats();
 
     // Fetch seat data on page load using real-time listener
     fetchSeatsRealtime();
