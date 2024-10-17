@@ -162,21 +162,34 @@
     }
 
 
-// Handle seat selection to allow only one selected seat at a time
-function selectSeat(seatElement, index) {
-  // Clear all selected seats before selecting a new one
-  clearSelectedSeats();
-
-  // Toggle selection of the clicked seat
-  seatElement.classList.toggle('selected');
-  
-  if (seatElement.classList.contains('selected')) {
-    selectedSeats.clear(); // Ensure no previously selected seats remain
-    selectedSeats.add(index); // Add the newly selected seat
-  } else {
-    selectedSeats.delete(index); // Deselect the seat if clicked again
-  }
-}
+    // Assuming `selectedSeats` is a Set that keeps track of selected seat indices
+    const selectedSeats = new Set();
+    
+    // Function to clear all selected seats
+    document.querySelectorAll('.seat.selected').forEach(seat => {
+      seat.classList.remove('selected');
+    });
+    }
+    
+    function selectSeat(seatElement, index) {
+      // Clear all selected seats before selecting a new one
+      clearSelectedSeats();
+    
+      // Toggle selection of the clicked seat
+      seatElement.classList.add('selected');
+    
+      // Add the selected seat to the Set
+      selectedSeats.clear();
+      selectedSeats.add(index);
+    
+      console.log('Selected seat:', Array.from(selectedSeats));  // Debugging: log selected seat
+    }
+    
+    // Usage
+    const seatElements = document.querySelectorAll('.seat');
+    seatElements.forEach((seat, index) => {
+      seat.addEventListener('click', () => selectSeat(seat, index));
+    });
 
     // Show inputs for booking (nickname and password)
     function showBookingInputs() {
