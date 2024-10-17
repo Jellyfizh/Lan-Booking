@@ -161,35 +161,26 @@
       });
     }
 
-
-    // Assuming `selectedSeats` is a Set that keeps track of selected seat indices
-    const selectedSeats = new Set();
-    
     // Function to clear all selected seats
-    document.querySelectorAll('.seat.selected').forEach(seat => {
-      seat.classList.remove('selected');
-    });
+    function clearSelectedSeats() {
+      document.querySelectorAll('.seat.selected').forEach(seat => {
+        seat.classList.remove('selected');
+      });
     }
-    
+
     function selectSeat(seatElement, index) {
       // Clear all selected seats before selecting a new one
       clearSelectedSeats();
-    
+
       // Toggle selection of the clicked seat
       seatElement.classList.add('selected');
-    
+
       // Add the selected seat to the Set
       selectedSeats.clear();
       selectedSeats.add(index);
-    
+
       console.log('Selected seat:', Array.from(selectedSeats));  // Debugging: log selected seat
     }
-    
-    // Usage
-    const seatElements = document.querySelectorAll('.seat');
-    seatElements.forEach((seat, index) => {
-      seat.addEventListener('click', () => selectSeat(seat, index));
-    });
 
     // Show inputs for booking (nickname and password)
     function showBookingInputs() {
@@ -200,13 +191,7 @@
       console.log('Showing booking inputs...'); // Debugging statement
       document.getElementById('booking-inputs').style.display = 'block';
     }
-    
-    // Clear selected seat styles after successful action
-    function clearSelectedSeats() {
-      const selectedElements = document.querySelectorAll('.seat.selected');
-      selectedElements.forEach(seat => seat.classList.remove('selected'));
-    }
-    
+
     // Submit the booking after nickname and password are provided
     async function submitBooking() {
       const nickname = document.getElementById('nickname').value.trim();
@@ -259,7 +244,7 @@
         const seats = seatsSnapshot.val() || [];
 
         selectedSeats.forEach(index => {
-          if (seats[index] && (seats[index].password === password || password === 'xx')) {
+          if (seats[index] && seats[index].password === password) {
             updates[`/seats/${index}/booked`] = false;
             updates[`/seats/${index}/nickname`] = null;
             updates[`/seats/${index}/password`] = null;
@@ -298,7 +283,7 @@
     }
 
     // Uncomment the following line to initialize seats in Firebase
-   initializeSeats();
+    initializeSeats();
 
     // Fetch seat data on page load using real-time listener
     fetchSeatsRealtime();
