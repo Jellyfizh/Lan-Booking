@@ -180,7 +180,13 @@
       console.log('Showing booking inputs...'); // Debugging statement
       document.getElementById('booking-inputs').style.display = 'block';
     }
-
+    
+    // Clear selected seat styles after successful action
+    function clearSelectedSeats() {
+      const selectedElements = document.querySelectorAll('.seat.selected');
+      selectedElements.forEach(seat => seat.classList.remove('selected'));
+    }
+    
     // Submit the booking after nickname and password are provided
     async function submitBooking() {
       const nickname = document.getElementById('nickname').value.trim();
@@ -205,6 +211,7 @@
 
         await firebase.database().ref().update(updates);
         alert('Booking confirmed!');
+        clearSelectedSeats();
         selectedSeats.clear();
         document.getElementById('booking-inputs').style.display = 'none'; // Hide inputs after booking
       } catch (error) {
@@ -244,6 +251,7 @@
         await firebase.database().ref().update(updates);
         alert('Booking removed!');
         selectedSeats.clear();
+        clearSelectedSeats();
       } catch (error) {
         console.error('Failed to remove booking', error);
         alert('Failed to remove booking');
@@ -252,7 +260,7 @@
 
     // Initialize seats in Firebase based on the reset_seats_on_initial variable
     async function initializeSeats() {
-      const reset_seats_on_initial = false; // Set to true to reset all seats initially
+      const reset_seats_on_initial = true; // Set to true to reset all seats initially
       if (reset_seats_on_initial) {
         const initialSeats = Array.from({ length: totalSeats }, () => ({
           booked: false,
