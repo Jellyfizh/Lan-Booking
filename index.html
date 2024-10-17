@@ -71,8 +71,13 @@
       padding: 5px;
     }
     #booking-inputs {
-      display: none; /* Hide initially */
+      display: none;  /* Hidden by default */
     }
+    
+    #nickname, #password, #submit-booking, #remove-booking {
+      display: none;  /* Hide all individual inputs by default */
+    }
+    
   </style>
 </head>
 <body>
@@ -81,14 +86,13 @@
     <div id="table-container">
       <!-- Tables with seats will be generated here -->
     </div>
-    
     <!-- Inputs for nickname and password, hidden by default -->
     <div id="booking-inputs">
-      <input type="text" id="nickname" class="nickname-input" placeholder="Enter your nickname" />
-      <input type="password" id="password" class="password-input" placeholder="Enter 2-character password" maxlength="2"/>
-      <button onclick="submitBooking()">Submit Booking</button>
-      <button onclick="removeBooking()">Remove Booking</button>
-    </div>   
+      <input type="text" id="nickname" class="nickname-input" placeholder="Enter your nickname" style="display: none;" />
+      <input type="password" id="password" class="password-input" placeholder="Enter your password" maxlength="2" style="display: none;" />
+      <button id="submit-booking" onclick="submitBooking()" style="display: none;">Submit Booking</button>
+      <button id="remove-booking" onclick="removeBooking()" style="display: none;">Remove Booking</button>
+    </div>
   </div>
 
   <!-- Add Firebase SDKs (Compat version) -->
@@ -195,42 +199,51 @@
     }
 
     function selectSeat(seatElement, index) {
-      // Check if the seat is already selected
+      // Check if the seat is already selected (deselect it)
       if (seatElement.classList.contains('selected')) {
-        // If already selected, deselect it
         seatElement.classList.remove('selected');
-        selectedSeats.delete(index);  // Remove the seat index from the selectedSeats set
+        selectedSeats.delete(index);  // Remove the seat from the selectedSeats set
         console.log(`Deselected seat index: ${index}`);
         
-        // Hide booking inputs when no seat is selected
-        hideBookingInputs();
+        hideBookingInputs();  // Hide all booking inputs when no seat is selected
       } else {
-        // If not selected, select the seat and deselect any others
-        clearSelectedSeats();  // Clear any previous selections visually
+        // Deselect other seats and clear previous selections
+        clearSelectedSeats();  // Clear visual selections
         selectedSeats.clear();  // Ensure only one seat is selected
     
         seatElement.classList.add('selected');
         selectedSeats.add(index);  // Add the currently selected seat's index
         console.log(`Selected seat index: ${index}`);
-        
-        // Show booking inputs when a seat is selected
-        showBookingInputs();
+    
+        // Check the booking status of the seat from Firebase data
+        const seatData = seats[index];  // Get the seat data from Firebase
+    
+        if (seatData && seatData.booked) {
+          showPasswordAndRemove();  // Show only password entry and "Remove Booking" button
+        } else {
+          showBookingInputs();  // Show the full booking inputs for available seat
+        }
       }
     }
 
+    function showPasswordAndRemove() {
+      document.getElementById('booking-inputs').style.display = 'block';  // Show inputs container
+      document.getElementById('nickname').style.display = 'none';  // Hide nickname input
+      document.getElementById('password').style.display = 'block';  // Show password input
+      document.getElementById('submit-booking').style.display = 'none';  // Hide submit button
+      document.getElementById('remove-booking').style.display = 'block';  // Show remove booking button
+    }
 
-    // Show booking inputs only if a seat is selected
     function showBookingInputs() {
-      const bookingInputs = document.getElementById('booking-inputs');
-      if (selectedSeats.size > 0) {  // If there is a selected seat
-        bookingInputs.style.display = 'block';  // Show the booking inputs
-      }
+      document.getElementById('booking-inputs').style.display = 'block';  // Show all booking inputs
+      document.getElementById('nickname').style.display = 'block';  // Show nickname input
+      document.getElementById('password').style.display = 'block';  // Show password input
+      document.getElementById('submit-booking').style.display = 'block';  // Show submit button
+      document.getElementById('remove-booking').style.display = 'none';  // Hide remove booking button
     }
     
-        // Hide booking inputs when no seat is selected
     function hideBookingInputs() {
-      const bookingInputs = document.getElementById('booking-inputs');
-      bookingInputs.style.display = 'none';  // Hide the booking inputs
+      document.getElementById('booking-inputs').style.display = 'none';  // Hide the inputs container
     }
 
     async function submitBooking() {
