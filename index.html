@@ -42,7 +42,16 @@
       cursor: pointer;
       transition: background-color 0.2s;
     }
-    .seat.booked { background-color: #e74c3c; cursor: pointer; }
+    .seat.booked { 
+      background-color: #e74c3c; 
+      cursor: pointer; 
+      color: white; /* Ensure the text inside booked seats is visible */ 
+      font-size: 12px; /* Adjust text size for better readability */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
     .seat.selected { background-color: #f39c12; }
     button {
       margin-top: 10px;
@@ -124,7 +133,6 @@
       });
     }
 
-        // Render tables and seats based on Firebase data
     function renderTables(seats) {
       tableContainer.innerHTML = '';
       let seatIndex = 0; // Start seat index
@@ -145,9 +153,21 @@
             const seatElement = document.createElement('div');
             seatElement.classList.add('seat');
     
-            // If the seat is booked, add the 'booked' class
+            // If the seat is booked, add the 'booked' class and display nickname
             if (seats[seatIndex] && seats[seatIndex].booked) {
               seatElement.classList.add('booked');
+    
+              // Add a label to show the nickname
+              const nickname = seats[seatIndex].nickname || 'Unknown';  // Default to 'Unknown' if no nickname
+              const nameLabel = document.createElement('span');
+              nameLabel.innerText = nickname;  // Set the nickname text
+              nameLabel.style.color = 'white'; // Style for better visibility on booked seats
+              nameLabel.style.fontSize = '12px';  // Adjust font size to fit within the seat
+              nameLabel.style.display = 'block';
+              nameLabel.style.textAlign = 'center';
+              nameLabel.style.marginTop = '15px';  // Center the name in the middle of the seat
+              
+              seatElement.appendChild(nameLabel);  // Add the nickname to the seat element
             }
     
             // Use 'let' here to ensure seatIndex is scoped correctly for each seat
