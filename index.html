@@ -253,6 +253,10 @@
         alert('Please enter your nickname.');
         return;
       }
+      if (nickname.length > 15) {
+        alert('Nickname must not exceed 15 characters.');
+        return;
+      }
       if (password.length !== 2) {
         alert('Please enter a 2-character password.');
         return;
