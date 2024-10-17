@@ -60,7 +60,9 @@
       margin-top: 10px;
       font-size: 16px;
       padding: 5px;
-      display: none; /* Hide by default */
+    }
+    #booking-inputs {
+      display: none; /* Hide initially */
     }
   </style>
 </head>
@@ -73,7 +75,7 @@
     <button onclick="showBookingInputs()">Confirm Booking</button>
 
     <!-- Inputs for nickname and password, hidden by default -->
-    <div id="booking-inputs" style="display: none;">
+    <div id="booking-inputs">
       <input type="text" id="nickname" class="nickname-input" placeholder="Enter your nickname" />
       <input type="password" id="password" class="password-input" placeholder="Enter 2-character password" maxlength="2"/>
       <button onclick="submitBooking()">Submit Booking</button>
@@ -175,6 +177,7 @@
         alert('Please select at least one seat to confirm booking.');
         return;
       }
+      console.log('Showing booking inputs...'); // Debugging statement
       document.getElementById('booking-inputs').style.display = 'block';
     }
 
